@@ -1,0 +1,59 @@
+**************************************************************************
+		* * * * *     MoSES_2PDF mode     * * * * *		
+**************************************************************************
+"adNOC_2Pb_landslide" is the landslide type mode.(the maximum cells are 100,000.)
+"adNOC_2Pb_inflow"    is the inflow type mode.(the maximum cells are 50,000.)
+
+(PS If you need more cells in the mode, please feel free to contact Dr. Tai by email: yctai@ncku.edu.tw)
+
+
+### How to install on Linux
+```
+sudo apt install nvidia-cuda-toolkit
+```
+
+## build the result directory
+	mkdir ./MoSES_2PDF_landslide/result2Pb
+	mkdir ./MoSES_2PDF_landslide/result2Pb/ascFile
+	mkdir ./MoSES_2PDF_landslide/result2Pb/openGLFile
+	
+	mkdir ./MoSES_2PDF_inflow/result2Pb
+	mkdir ./MoSES_2PDF_inflow/result2Pb/ascFile
+	mkdir ./MoSES_2PDF_inflow/result2Pb/openGLFile
+
+## run MoSES_2PDF landslide type:
+    cd ./MoSES_2PDF_landslide
+    ./MoSES_2PDF_landslide
+## MoSES_2PDF inflow type:
+    cd ./MoSES_2PDF_inflow/
+    ./MoSES_2PDF_inflow
+
+
+## PARAMETER SETTING: par_List
+
+
+## TOPOGRAPHY DATA: (in directory "Data")
+Because of relevant regulations, We only provides terrain with a grid accuracy of 20 m.
+
+
+## DataProcess
+(1) "plotResult" has plot_2PbGPU.py. The python code can plot the "MoSES_2PDF" computation result.
+
+(2) "toGIS" has ResulttoGIS. The code can transform the "MoSES_2PDF" computation result to QGIS or ArcGIS.
+
+(3) "toANSIP" has ResulttoANSIP. The code can transform the "MoSES_2PDF" computation result to ANSI-platform.
+
+
+
+
+## Help (email: yctai@ncku.edu.tw)
+In case of any question by applying the above code(s), please feel free
+to contact Dr. Yih-Chin Tai. And any suggestion(s) or collaboration for
+extending the current code is welcome.
+
+Associate Prof. Dr.-Ing Yih-Chin Tai
+email: yctai@ncku.edu.tw
+Dept. Hydraulic and Ocean Engineering
+National Cheng Kung University, Taiwan
+
+First version: 2021/04/07

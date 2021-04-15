@@ -1,0 +1,12 @@
+720      # Total simulation time (sec)
+10       # Each output time (sec)
+16.00  # delta0 (friction angle of solid constituent) in degree
+6.0    # value of Cd
+268.   # value of N_R
+5.0    # value of varTheta
+0.5    # initial value of solid volume fraction [0.45 0.5 0.55]
+./Data/DF004_3hr_6min/00_DebrisFlow_dem_20m.asc	# topography data (DEM)
+./Data/DF004_3hr_6min/00_h_t.dat	# initial depth (H)
+./Data/DF004_3hr_6min/00_u_t.dat	# initial velocity (u)
+./Data/DF004_3hr_6min/00_v_t.dat	# initial velocity (v)
+./Data/DF004_3hr_6min/00_location.dat	# inrflow point location

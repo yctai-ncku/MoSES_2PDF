@@ -1,0 +1,10 @@
+180      # Total simulation time (sec)
+3       # Each output time (sec)
+16.00 # delta0 (friction angle of solid constituent) in degree
+6.0    # value of Cd
+268.   # value of N_R
+5.0    # value of varTheta
+0.5    # initial value of solid volume fraction [0.45 0.5 0.55]
+./Data/hsiaolin_landslide_asc/shiaolin_topo_20m.asc		# topography data (DEM)
+./Data/hsiaolin_landslide_asc/shiaolin_init20m.asc		# initial depth
+
