@@ -43,7 +43,7 @@ Because of relevant regulations, We only provides terrain with a grid accuracy o
 
 (3) "toANSIP" has ResulttoANSIP. The code can transform the "MoSES_2PDF" computation result to ANSI-platform.
 
-## demo video
+## Demo video
 
 MoSES_2PDF_demo:
 https://youtu.be/9E9veNhrSME
