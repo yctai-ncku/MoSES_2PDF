@@ -1,8 +1,8 @@
 **************************************************************************
 		* * * * *     MoSES_2PDF mode     * * * * *		
 **************************************************************************
-"adNOC_2Pb_landslide" is the landslide type mode.(the maximum cells are 100,000.)
-"adNOC_2Pb_inflow"    is the inflow type mode.(the maximum cells are 50,000.)
+"adNOC_2Pb_landslide" is the landslide type mode.
+"adNOC_2Pb_inflow"    is the inflow type mode.
 
 (PS If you need more cells in the mode, please feel free to contact Dr. Tai by email: yctai@ncku.edu.tw)
 
