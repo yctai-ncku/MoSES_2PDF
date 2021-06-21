@@ -6,10 +6,23 @@
 
 (PS If you need more cells in the mode, please feel free to contact Dr. Tai by email: yctai@ncku.edu.tw)
 
+### Requirements
+MoSES_2PDF was developed and tested on Ubuntu 18.04 LTS. It relies on CUDA Version 11.2.
 
 ### How to install on Linux
 ```
 sudo apt install nvidia-cuda-toolkit
+```
+Use a makefile to compile
+
+```
+cd ./MoSES_2PDF_landslide
+make 
+```
+or
+```
+cd ./MoSES_2PDF_inflow
+make 
 ```
 
 ## build the result directory
