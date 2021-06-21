@@ -110,13 +110,17 @@ void RunKernels::dataInitialization()
 
 	// read Topo data
 	if (inputFileTopo.fail() ){
-	  cout << "\nError can't open Topo file.\n"<< endl;
-	  assert(0);
+		printf("\n\t----------------------------------\n");
+		printf("\t   Error can't open Topo file.\n");
+		printf("\t----------------------------------\n");
+		assert(0);
 	}
 
 	// read init data
 	if (inputFileInit.fail() ){
-		cout << "\nError can't open Initial file.\n"<< endl;
+		printf("\n\t----------------------------------\n");
+		printf("\t   Error can't open Initial file.\n");
+		printf("\t----------------------------------\n");
 		assert(0);
 	}
 
@@ -174,19 +178,9 @@ void RunKernels::dataInitialization()
 	nx = NX;
 	ny = NY;
 
-	if(nx*ny>100000){
-		fprintf(stdout,"\n\t***********************************\n");
-  		fprintf(stdout,"\t     Number of grids exceeded\n");
-  		fprintf(stdout,"\t***********************************\n\n");
-
-		assert(0);
-	}
-
 	dx = dx*10;
 	dy = dy*10;
 
-	// dx = (MAXX - MINX)/(nx-1);
-	// dy = (MAXY - MINY)/(ny-1);
 	MINX = 0.0;
 	MINY = 0.0;
 
@@ -204,7 +198,6 @@ void RunKernels::dataInitialization()
   	fprintf(stdout,"\t\tDomain [dm]          : (%5.3f,%5.3f)(%5.3f,%5.3f)\n",
 		MINX, MAXX, MINY, MAXY);
   	fprintf(stdout,"\t\tGrid size            : %6.2f,%6.2f (%d,%d)\n",dx,dy,nx,ny);
-  	/*  fprintf(stdout,"\tMaximum time         : %5.3f\n", tf);*/
 	fprintf(stdout,"\t\tCFL number           : %5.3f\n", CFL);
 	fprintf(stdout,"\t\tdelta0               : %5.3f\n", delta0);
 	fprintf(stdout,"\t\tCd                   : %5.3f\n", Cd);
@@ -225,7 +218,7 @@ void RunKernels::dataInitialization()
 			split(inputTopoTmp[j+5], Topodata, " ");
 			
 			for(int i=0; i<NX; i++) {
-				topo[i+MD][j+MD] = stod(Topodata[i]);
+				topo[i+MD][j+MD] = stof(Topodata[i]);
 				topo[i+MD][j+MD] = 10.0*topo[i+MD][j+MD];
 
 				if(topo[i+MD][j+MD]<0){
@@ -240,7 +233,7 @@ void RunKernels::dataInitialization()
 			split(inputTopoTmp[j+6], Topodata, " ");
 			
 			for(int i=0; i<NX; i++) {
-				topo[i+MD][j+MD] = stod(Topodata[i]);
+				topo[i+MD][j+MD] = stof(Topodata[i]);
 				topo[i+MD][j+MD] = 10.0*topo[i+MD][j+MD];
 
 				if(topo[i+MD][j+MD]<0){
@@ -312,25 +305,31 @@ void RunKernels::dataInitialization()
 
 clock_t RunKernels::run()
 {
-	cudaMallocHost((void **)&TotalStep_h, sizeof(double));
-	cudaMallocHost((void **)&dt_h, sizeof(double));
+	cudaError_t errhost ;
+	errhost = cudaMallocHost((void **)&TotalStep_h, sizeof(double));
+	errhost = cudaMallocHost((void **)&dt_h, sizeof(double));
 
-	cudaMallocHost((void **)&depth_h, sizeof(double) * arraySize);
-	cudaMallocHost((void **)&topo_h, sizeof(double) * arraySize);
-	cudaMallocHost((void **)&speed_h, sizeof(double) * arraySize);
+	errhost = cudaMallocHost((void **)&depth_h, sizeof(double) * arraySize);
+	errhost = cudaMallocHost((void **)&topo_h, sizeof(double) * arraySize);
+	errhost = cudaMallocHost((void **)&speed_h, sizeof(double) * arraySize);
 
-	cudaMallocHost((void **)&resultHs_h, sizeof(double) * arraySize);
-	cudaMallocHost((void **)&resultHf_h, sizeof(double) * arraySize);
-	cudaMallocHost((void **)&resultUs_h, sizeof(double) * arraySize);
-	cudaMallocHost((void **)&resultVs_h, sizeof(double) * arraySize);
-	cudaMallocHost((void **)&resultUf_h, sizeof(double) * arraySize);
-	cudaMallocHost((void **)&resultVf_h, sizeof(double) * arraySize);
+	errhost = cudaMallocHost((void **)&resultHs_h, sizeof(double) * arraySize);
+	errhost = cudaMallocHost((void **)&resultHf_h, sizeof(double) * arraySize);
+	errhost = cudaMallocHost((void **)&resultUs_h, sizeof(double) * arraySize);
+	errhost = cudaMallocHost((void **)&resultVs_h, sizeof(double) * arraySize);
+	errhost = cudaMallocHost((void **)&resultUf_h, sizeof(double) * arraySize);
+	errhost = cudaMallocHost((void **)&resultVf_h, sizeof(double) * arraySize);
 
-	cudaMallocHost((void **)&resultphi_h, sizeof(double) * arraySize);
+	errhost = cudaMallocHost((void **)&resultphi_h, sizeof(double) * arraySize);
 	
-	cudaMallocHost((void **)&bfkt_h,   sizeof(double) * arraySize * 3);
-	cudaMallocHost((void **)&svec_h,   sizeof(double) * arraySize * 2);
-	cudaMallocHost((void **)&cvalue_h, sizeof(double) * arraySize);
+	errhost = cudaMallocHost((void **)&bfkt_h,   sizeof(double) * arraySize * 3);
+	errhost = cudaMallocHost((void **)&svec_h,   sizeof(double) * arraySize * 2);
+	errhost = cudaMallocHost((void **)&cvalue_h, sizeof(double) * arraySize);
+	errhost = cudaMallocHost((void **)&result_h, sizeof(double) * arraySize);
+
+	if(errhost != cudaSuccess){
+		printf("\nCould not allocate Host memory : %d\n",errhost);
+	}
 		
 	for(int i = 0; i < nxd; i++){
 		for(int j = 0; j < nyd; j++){
@@ -359,21 +358,24 @@ clock_t RunKernels::run()
 void RunKernels::kernelStep()
 {
 
-	cudaMemset(dev_TotalTime, 0, sizeof(double));
-	cudaMemset(dev_dt, 0.0, sizeof(double));
-	cudaMemset(dev_dtval, 0.0, sizeof(double));
-	cudaMemset(dt_h, 0.0, sizeof(double));
-	
-	cudaMemcpy(dev_topo,   topo_h, sizeof(double) * arraySize, cudaMemcpyHostToDevice);
-	cudaMemcpy(dev_depth, depth_h, sizeof(double) * arraySize, cudaMemcpyHostToDevice);
+	cudaError_t errMem, errCpy ;
 
-	cudaMallocHost((void **)&result_h, sizeof(double) * arraySize);
+	errMem = cudaMemset(dev_TotalTime, 0.0, sizeof(double));
+	errMem = cudaMemset(dev_dt, 0.0, sizeof(double));
+	errMem = cudaMemset(dev_dtval, 0.0, sizeof(double));
+	errMem = cudaMemset(dt_h, 0.0, sizeof(double));
+	
+	if(errMem != cudaSuccess){
+		printf("\nError cuda Memory set : %d\n",errMem);
+	}
+
+	errCpy = cudaMemcpy(dev_topo,   topo_h, sizeof(double) * arraySize, cudaMemcpyHostToDevice);
+	errCpy = cudaMemcpy(dev_depth, depth_h, sizeof(double) * arraySize, cudaMemcpyHostToDevice);
 
 	int bx = (nxd + BLOCK_SIZE - 1) / BLOCK_SIZE;
 	int by = (nyd  + BLOCK_SIZE - 1) / BLOCK_SIZE;
 	dim3 blocksPerGrid(bx, by);
 	dim3 threadsPerBlock(BLOCK_SIZE, BLOCK_SIZE);
-
 
 	double Htmp, hstmp, hftmp, ustmp, uftmp, vstmp, vftmp, phitmp;
 
@@ -405,7 +407,6 @@ void RunKernels::kernelStep()
 		dx, dy,
 		nxd, nyd, nx, ny);
 	cudaDeviceSynchronize();
-
 
 	makeTopo3Kernel <<<blocksPerGrid, threadsPerBlock>>>(
 		dev_result, 
@@ -539,15 +540,22 @@ void RunKernels::kernelStep()
 		nxd, nyd, nx ,ny);
 	cudaDeviceSynchronize();
 
-	cudaMemcpy(bfkt_h,   &dev_bfkt[0],   sizeof(double)* arraySize * 3, cudaMemcpyDeviceToHost);
-	cudaMemcpy(svec_h,   &dev_svec[0],   sizeof(double)* arraySize * 2, cudaMemcpyDeviceToHost);
-	cudaMemcpy(cvalue_h, &dev_cvalue[0], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
+	errCpy = cudaMemcpy(bfkt_h,   &dev_bfkt[0],   sizeof(double)* arraySize * 3, cudaMemcpyDeviceToHost);
+	errCpy = cudaMemcpy(svec_h,   &dev_svec[0],   sizeof(double)* arraySize * 2, cudaMemcpyDeviceToHost);
+	errCpy = cudaMemcpy(cvalue_h, &dev_cvalue[0], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
 				
-
-	char check_Topo[100]; sprintf(check_Topo,"./result2Pb/DEM.dat");
 	FILE  *fpTopo;
 
-	fpTopo=fopen(check_Topo, "w");
+	if ((fpTopo=fopen("./result2Pb/DEM.dat", "w")) == NULL)
+    {
+		printf("\n\t---------------------------------------------------------\n");
+		printf("\t  Error can't open \"result2Pb\" folder.\n");
+		printf("\t  Need build the result directory  --> mkdir result2Pb\n");
+		printf("\t---------------------------------------------------------\n");
+		
+		fclose(fpTopo);
+		exit(0);
+    }
 	fprintf(fpTopo, "VARIABLES = \"x\", \"y\", \"z\", \"c\", \"S1\", \"S2\"\n ");
 	for (int i=MD;i<nxd-MD;i++) {
 	  for (int j=MD;j<nyd-MD;j++) {
@@ -560,8 +568,11 @@ void RunKernels::kernelStep()
 
 	if ((fpInit=fopen("./result2Pb/001.dat", "w")) == NULL)
     {
-      fclose(fpInit);
-      exit(0);
+		printf("\n\t---------------------------------------------------------\n");
+		printf("\t  Error can't open \"result2Pb\" folder.\n");
+		printf("\t---------------------------------------------------------\n");
+		fclose(fpInit);
+		exit(0);
     }
 	fprintf(fpInit, "VARIABLES = \"H\", \"phi\", \"Us\", \"Uf\", \"Vs\", \"Vf\"\n ");
 	for (int i=MD;i<nxd-MD;i++) {
@@ -574,8 +585,11 @@ void RunKernels::kernelStep()
 	FILE  *fpInfo;
 	if ((fpInfo=fopen("./result2Pb/Info.dat", "w")) == NULL)
     {
-      fclose(fpInfo);
-      exit(0);
+		printf("\n\t---------------------------------------------------------\n");
+		printf("\t  Error can't open \"result2Pb\" folder.\n");
+		printf("\t---------------------------------------------------------\n");
+    	fclose(fpInfo);
+    	exit(0);
 	}
 	fprintf(fpInfo, "VARIABLES = \"x-point\", \"y-point\", \"dx\", \"dy\", \"xllcorner\", \"yllcorner\", \"TotalStep\"\n ");
 	fprintf(fpInfo, "\t%d\t\t %d\t %10.2f\t %10.2f\t %10.4f\t %10.4f\t %d", NX, NY, (dx*0.1), (dy*0.1), xllcorner, yllcorner,(outputStep+1));
@@ -961,18 +975,20 @@ void RunKernels::kernelStep()
 					dev_result, 
 					dev_dtval, dev_maxW, dev_TotalTime);
 				cudaDeviceSynchronize();
-				cudaMemcpy(dt_h, dev_dtval, sizeof(double)* 1, cudaMemcpyDeviceToHost);
-				cudaMemcpy(TotalStep_h, dev_TotalTime, sizeof(double)* 1, cudaMemcpyDeviceToHost);
+				errCpy = cudaMemcpy(dt_h, dev_dtval, sizeof(double)* 1, cudaMemcpyDeviceToHost);
+				errCpy = cudaMemcpy(TotalStep_h, dev_TotalTime, sizeof(double)* 1, cudaMemcpyDeviceToHost);
 				
 				if((*TotalStep_h + *dt_h) >= tf[iter]){
 					*dt_h =  tf[iter] - *TotalStep_h;
 					schreiben = 1;
-					cudaMemcpy(dev_dtval, dt_h, sizeof(double)* 1, cudaMemcpyHostToDevice);
+					errCpy = cudaMemcpy(dev_dtval, dt_h, sizeof(double)* 1, cudaMemcpyHostToDevice);
 					// cout << *TotalStep_h <<endl; 
 					iter++;
 				}
 				cudaDeviceSynchronize();
 				// printf("%10.5f", *dt_h);
+				fprintf(stdout, "\r\t\tSimulation progress: %3.0f %%", (*TotalStep_h*0.1/TotalSim)*100);
+				fflush(stdout);
 
 			}
 
@@ -1164,13 +1180,11 @@ void RunKernels::kernelStep()
 				nxd, nyd);
 			cudaDeviceSynchronize();
 
-
 			Flux20Kernel <<<blocksPerGrid, threadsPerBlock>>>(
 				dev_result, 
 				dev_u, dev_utmp,
 				nxd, nyd);
 			cudaDeviceSynchronize();
-
 
 			Flux21Kernel <<<blocksPerGrid, threadsPerBlock>>>(
 				dev_result, 
@@ -1247,13 +1261,13 @@ void RunKernels::kernelStep()
 				{
 					if(schreiben==1){
 							
-						cudaMemcpy(resultHs_h, &dev_u[0 * nyd * nxd], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
-						cudaMemcpy(resultHf_h, &dev_u[3 * nyd * nxd], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
-						cudaMemcpy(resultUs_h, &dev_u[1 * nyd * nxd], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
-						cudaMemcpy(resultVs_h, &dev_u[2 * nyd * nxd], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
-						cudaMemcpy(resultUf_h, &dev_u[4 * nyd * nxd], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
-						cudaMemcpy(resultVf_h, &dev_u[5 * nyd * nxd], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
-						cudaMemcpy(resultphi_h,&dev_u[6 * nyd * nxd], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
+						errCpy = cudaMemcpy(resultHs_h, &dev_u[0 * nyd * nxd], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
+						errCpy = cudaMemcpy(resultHf_h, &dev_u[3 * nyd * nxd], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
+						errCpy = cudaMemcpy(resultUs_h, &dev_u[1 * nyd * nxd], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
+						errCpy = cudaMemcpy(resultVs_h, &dev_u[2 * nyd * nxd], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
+						errCpy = cudaMemcpy(resultUf_h, &dev_u[4 * nyd * nxd], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
+						errCpy = cudaMemcpy(resultVf_h, &dev_u[5 * nyd * nxd], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
+						errCpy = cudaMemcpy(resultphi_h,&dev_u[6 * nyd * nxd], sizeof(double)* arraySize, cudaMemcpyDeviceToHost);
 					
 						
 						char outfile_Web[100]; sprintf(outfile_Web,"./result2Pb/%03d.dat",iter);
@@ -1300,7 +1314,6 @@ void RunKernels::kernelStep()
 						}
 						fclose(fpout);
 
-						
 						if(iter == outsteplen){
 							nstop = 1;
 							// Totalnt = nt;
@@ -1312,7 +1325,6 @@ void RunKernels::kernelStep()
 
 			}
 			
-			
 			cudaDeviceSynchronize();
 
 	}
@@ -1322,320 +1334,329 @@ void RunKernels::kernelStep()
 			cout << cudaGetErrorString(cudaPeekAtLastError()) << endl;
 	}
 
-	cudaMemcpy(TotalStep_h, dev_TotalTime, sizeof(double)* 1, cudaMemcpyDeviceToHost);
+	errCpy = cudaMemcpy(TotalStep_h, dev_TotalTime, sizeof(double)* 1, cudaMemcpyDeviceToHost);
 	cout << "\nTotal time : " << *TotalStep_h/10 << " sec  ";
-	// cout << "\nTotal step : " << Totalnt      << "   \n";
 	fprintf(stdout, "\nTotal number of steps: %d\n", nt);
+
+	if(errCpy != cudaSuccess){
+		printf("\nError cuda Memory copy : %d\n",errCpy);
+	}
 }
 
 
 void RunKernels::memoryMalloc()
 {
-	cudaMalloc((void **)&dev_topo, sizeof(double) * arraySize); 
-	cudaMalloc((void **)&dev_depth, sizeof(double) * arraySize); 
-	cudaMalloc((void **)&dev_result, sizeof(double) * arraySize);
+	cudaError_t errdevice ;
 
-	cudaMalloc((void **)&dev_bfkt, sizeof(double) * arraySize * 3);
+	errdevice = cudaMalloc((void **)&dev_topo, sizeof(double) * arraySize); 
+	errdevice = cudaMalloc((void **)&dev_depth, sizeof(double) * arraySize); 
+	errdevice = cudaMalloc((void **)&dev_result, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_posx, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_posy, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_bfkt, sizeof(double) * arraySize * 3);
 
-	cudaMalloc((void **)&dev_dxdxi11, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dxdxi12, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dxdxi21, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dxdxi22, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_posx, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_posy, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_dbdx  , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dbdy  , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_cvalue, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dxdxi11, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dxdxi12, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dxdxi21, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dxdxi22, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_svec  , sizeof(double) * arraySize * 2);
-	cudaMalloc((void **)&dev_Jacb31, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_Jacb32, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dbdx  , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dbdy  , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_cvalue, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_dettmp, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_Detmin, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_svec  , sizeof(double) * arraySize * 2);
+	errdevice = cudaMalloc((void **)&dev_Jacb31, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_Jacb32, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_i_ddxi11, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_i_ddxi12, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_i_ddxi21, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_i_ddxi22, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dettmp, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_Detmin, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_invJ11, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ12, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ13, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_i_ddxi11, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_i_ddxi12, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_i_ddxi21, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_i_ddxi22, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_invJ21, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ22, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ23, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ11, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ12, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ13, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_invJ31, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ32, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ33, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ21, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ22, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ23, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_u     , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_uzero , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_invJ31, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ32, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ33, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_Hpx   , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_Hpy   , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_Ppx   , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_Ppy   , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_PDx   , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_PDy   , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_u     , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_uzero , sizeof(double) * arraySize * 7);
 
-	cudaMalloc((void **)&dev_ux    , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_uy    , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_Hpx   , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_Hpy   , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_Ppx   , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_Ppy   , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_PDx   , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_PDy   , sizeof(double) * arraySize * 7);
 
-	cudaMalloc((void **)&dev_dux   , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_duy   , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_ux    , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_uy    , sizeof(double) * arraySize * 7);
 
-	cudaMalloc((void **)&dev_t1x   , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_t2x   , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_t1y   , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_t2y   , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_dux   , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_duy   , sizeof(double) * arraySize * 7);
+
+	errdevice = cudaMalloc((void **)&dev_t1x   , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_t2x   , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_t1y   , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_t2y   , sizeof(double) * arraySize * 7);
 	
-	cudaMalloc((void **)&dev_sgnAx , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_sgnBx , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_sgnAy , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_sgnBy , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_sgnAx , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_sgnBx , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_sgnAy , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_sgnBy , sizeof(double) * arraySize * 7);
 
-	cudaMalloc((void **)&dev_uE , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_uW , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_uN , sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_uS , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_uE , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_uW , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_uN , sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_uS , sizeof(double) * arraySize * 7);
 
-	cudaMalloc((void **)&dev_tande , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_tande , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_J13dxi , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_J23dxi , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_J33dxi , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_J13det , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_J23det , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_J33det , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J13dxi , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J23dxi , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J33dxi , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J13det , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J23det , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J33det , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_apEW  , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_apSN  , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_apFEW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_apFSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_apEW  , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_apSN  , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_apFEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_apFSN , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_dxdxi11_avgEW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dxdxi21_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dxdxi11_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dxdxi21_avgEW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_dxdxi12_avgSN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dxdxi22_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dxdxi12_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dxdxi22_avgSN , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_J13dxi_avgEW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_J23dxi_avgEW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_J33dxi_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J13dxi_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J23dxi_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J33dxi_avgEW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_J13det_avgEW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_J23det_avgEW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_J33det_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J13det_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J23det_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J33det_avgEW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_J13dxi_avgSN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_J23dxi_avgSN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_J33dxi_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J13dxi_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J23dxi_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J33dxi_avgSN , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_J13det_avgSN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_J23det_avgSN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_J33det_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J13det_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J23det_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_J33det_avgSN , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_invJ11_avgEW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ12_avgEW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ13_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ11_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ12_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ13_avgEW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_invJ21_avgEW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ22_avgEW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ23_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ21_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ22_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ23_avgEW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_invJ31_avgEW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ32_avgEW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ33_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ31_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ32_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ33_avgEW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_invJ11_avgSN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ12_avgSN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ13_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ11_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ12_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ13_avgSN , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_invJ21_avgSN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ22_avgSN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ23_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ21_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ22_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ23_avgSN , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_invJ31_avgSN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ32_avgSN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_invJ33_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ31_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ32_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_invJ33_avgSN , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_Detmin_avgEW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_Detmin_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_Detmin_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_Detmin_avgSN , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_cval_avgEW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_cval_avgSN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_cval_avgEW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_cval_avgSN , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_svec_avgEW , sizeof(double) * arraySize * 2);
-	cudaMalloc((void **)&dev_svec_avgSN , sizeof(double) * arraySize * 2);
+	errdevice = cudaMalloc((void **)&dev_svec_avgEW , sizeof(double) * arraySize * 2);
+	errdevice = cudaMalloc((void **)&dev_svec_avgSN , sizeof(double) * arraySize * 2);
 
-	cudaMalloc((void **)&dev_vexE , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_vexW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_veyE , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_veyW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_vexE , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_vexW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_veyE , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_veyW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_w_wertE , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_w_wertW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_w_wertE , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_w_wertW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_vexFE , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_vexFW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_veyFE , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_veyFW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_vexFE , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_vexFW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_veyFE , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_veyFW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_w_wertFE , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_w_wertFW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_w_wertFE , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_w_wertFW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_vexN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_vexS , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_veyN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_veyS , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_vexN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_vexS , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_veyN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_veyS , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_w_wertN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_w_wertS , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_w_wertN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_w_wertS , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_vexFN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_vexFS , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_veyFN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_veyFS , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_vexFN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_vexFS , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_veyFN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_veyFS , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_w_wertFN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_w_wertFS , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_w_wertFN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_w_wertFS , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_q_xiE , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_etE , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_xiW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_etW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_xiE , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_etE , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_xiW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_etW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_q_xiFE , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_etFE , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_xiFW , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_etFW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_xiFE , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_etFE , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_xiFW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_etFW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_NpressFE , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_NpressFW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_NpressFE , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_NpressFW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_M11EW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_M11EW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_q_xiN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_etN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_xiS , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_etS , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_xiN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_etN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_xiS , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_etS , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_q_xiFN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_etFN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_xiFS , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_etFS , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_xiFN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_etFN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_xiFS , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_etFS , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_NpressFN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_NpressFS , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_NpressFN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_NpressFS , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_M22SN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_M22SN , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_apE  , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_apW  , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_apFE , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_apFW , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_apE  , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_apW  , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_apFE , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_apFW , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_apN  , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_apS  , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_apFN , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_apFS , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_apN  , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_apS  , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_apFN , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_apFS , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_em_x , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_em_y , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_em_Fx, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_em_Fy, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_em_x , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_em_y , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_em_Fx, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_em_Fy, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_FpE, sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_FpW, sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_GpN, sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_GpS, sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_FpE, sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_FpW, sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_GpN, sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_GpS, sizeof(double) * arraySize * 7);
 
-	cudaMalloc((void **)&dev_czw1x , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_czw2x , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_czwF1x, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_czwF2x, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_czw1x , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_czw2x , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_czwF1x, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_czwF2x, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_czw1y , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_czw2y , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_czwF1y, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_czwF2y, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_czw1y , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_czw2y , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_czwF1y, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_czwF2y, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_em_valS, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_em_valF, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_Val    , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_em_valS, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_em_valF, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_Val    , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_dudxE, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dvdxE, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dudyE, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dvdyE, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dudxE, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dvdxE, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dudyE, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dvdyE, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_dudxN, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dvdxN, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dudyN, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dvdyN, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dudxN, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dvdxN, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dudyN, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dvdyN, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_duxidxix, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dvetdxix, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_duxidetx, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dvetdetx, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_duxidxix, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dvetdxix, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_duxidetx, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dvetdetx, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_duxidxiy, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dvetdxiy, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_duxidety, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_dvetdety, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_duxidxiy, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dvetdxiy, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_duxidety, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_dvetdety, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_vex    , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_vey    , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_vexF   , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_veyF   , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_vex    , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_vey    , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_vexF   , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_veyF   , sizeof(double) * arraySize);
 	
-	cudaMalloc((void **)&dev_w_wert , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_w_wertF, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_usw    , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_vel    , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_w_wert , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_w_wertF, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_usw    , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_vel    , sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_vexw   , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_veyw   , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_xi   , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_et   , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_xiF  , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_q_etF  , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_vexw   , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_veyw   , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_xi   , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_et   , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_xiF  , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_q_etF  , sizeof(double) * arraySize);
 	
-	cudaMalloc((void **)&dev_Ac     , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_AcF    , sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_Npress1, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_Npress2, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_NpressF, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_Ac     , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_AcF    , sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_Npress1, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_Npress2, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_NpressF, sizeof(double) * arraySize);
 	
-	cudaMalloc((void **)&dev_s, sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_v, sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_s, sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_v, sizeof(double) * arraySize * 7);
 
-	cudaMalloc((void **)&dev_uone, sizeof(double) * arraySize * 7);
-	cudaMalloc((void **)&dev_utwo, sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_uone, sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_utwo, sizeof(double) * arraySize * 7);
 
-	cudaMalloc((void **)&dev_usxnew, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_ufxnew, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_usxold, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_ufxold, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_usxnew, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_ufxnew, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_usxold, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_ufxold, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_usynew, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_ufynew, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_usyold, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_ufyold, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_usynew, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_ufynew, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_usyold, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_ufyold, sizeof(double) * arraySize);
 
-	cudaMalloc((void **)&dev_utmp, sizeof(double) * arraySize * 7);
+	errdevice = cudaMalloc((void **)&dev_utmp, sizeof(double) * arraySize * 7);
 
-	cudaMalloc((void **)&dev_waveSpeed, sizeof(double) * arraySize);
-	cudaMalloc((void **)&dev_max, sizeof(double) * 256);
-	cudaMalloc((void **)&dev_maxW, sizeof(double) * 1);
-	cudaMalloc((void **)&dev_TotalTime, sizeof(double) * 1);
-	cudaMalloc((void **)&dev_dt, sizeof(double) * 1);
-	cudaMalloc((void **)&dev_dtval, sizeof(double) * 1);
+	errdevice = cudaMalloc((void **)&dev_waveSpeed, sizeof(double) * arraySize);
+	errdevice = cudaMalloc((void **)&dev_max, sizeof(double) * 256);
+	errdevice = cudaMalloc((void **)&dev_maxW, sizeof(double) * 1);
+	errdevice = cudaMalloc((void **)&dev_TotalTime, sizeof(double) * 1);
+	errdevice = cudaMalloc((void **)&dev_dt, sizeof(double) * 1);
+	errdevice = cudaMalloc((void **)&dev_dtval, sizeof(double) * 1);
+
+	if(errdevice != cudaSuccess){
+		printf("\nCould not allocate Device memory : %d\n",errdevice);
+	}
 
 }
 
@@ -1856,17 +1877,82 @@ void RunKernels::freeMemory()
 	cudaFree(dev_GpN);
 	cudaFree(dev_GpS);
 
+	cudaFree(dev_czw1x);
+	cudaFree(dev_czw2x);
+	cudaFree(dev_czwF1x);
+	cudaFree(dev_czwF2x);
+
+	cudaFree(dev_czw1y);
+	cudaFree(dev_czw2y);
+	cudaFree(dev_czwF1y);
+	cudaFree(dev_czwF2y);
+
+	cudaFree(dev_em_valS);
+	cudaFree(dev_em_valF);
+	cudaFree(dev_Val);
+
+	cudaFree(dev_dudxE);
+	cudaFree(dev_dvdxE);
+	cudaFree(dev_dudyE);
+	cudaFree(dev_dvdyE);
+
+	cudaFree(dev_dudxN);
+	cudaFree(dev_dvdxN);
+	cudaFree(dev_dudyN);
+	cudaFree(dev_dvdyN);
+
+	cudaFree(dev_duxidxix);
+	cudaFree(dev_dvetdxix);
+	cudaFree(dev_duxidetx);
+	cudaFree(dev_dvetdetx);
+
+	cudaFree(dev_duxidxiy);
+	cudaFree(dev_dvetdxiy);
+	cudaFree(dev_duxidety);
+	cudaFree(dev_dvetdety);
+
+	cudaFree(dev_vex);
+	cudaFree(dev_vey);
+	cudaFree(dev_vexF);
+	cudaFree(dev_veyF);
+
+	cudaFree(dev_w_wert);
+	cudaFree(dev_w_wertF);
+	cudaFree(dev_usw);
+	cudaFree(dev_vel);
+
+	cudaFree(dev_vexw);
+	cudaFree(dev_veyw);
+	cudaFree(dev_q_xi);
+	cudaFree(dev_q_et);
+	cudaFree(dev_q_xiF);
+	cudaFree(dev_q_etF);
+
+	cudaFree(dev_Ac);
+	cudaFree(dev_AcF);
+	cudaFree(dev_Npress1);
+	cudaFree(dev_Npress2);
+	cudaFree(dev_NpressF);
 
 	cudaFree(dev_s);
 	cudaFree(dev_v);
 
+	cudaFree(dev_uone);
+	cudaFree(dev_utwo);
+
+	cudaFree(dev_usxnew);
+	cudaFree(dev_ufxnew);
+	cudaFree(dev_usxold);
+	cudaFree(dev_ufxold);
+
+	cudaFree(dev_utmp);
 
 	cudaFree(dev_waveSpeed);
 	cudaFree(dev_max);
 	cudaFree(dev_maxW);
 	cudaFree(dev_TotalTime);
 	cudaFree(dev_dt);
-
+	cudaFree(dev_dtval);
 
 	
 }

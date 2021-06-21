@@ -116,35 +116,26 @@ for ii in range(1,iiend,iistep):
     plt.yticks(())
     
     color_map = mpl.cm.rainbow
-#    normlizer = mpl.colors.Normalize(vmin = minH, vmax = maxH)
-    normlizer = mpl.colors.Normalize(vmin = minH, vmax = 80)
 
     
     if OutType == 1:
-#        Ch2 = plt.contourf(x_loc,y_loc,Mh, alpha=.9, cmap=plt.cm.jet,norm=normlizer)
-        Ch2 = plt.pcolormesh(x_loc, y_loc, Mh, cmap=color_map,norm=normlizer)
+        Ch2 = plt.pcolormesh(x_loc, y_loc, Mh, shading='auto')
         figTXT = 'Fig_H'+str(ii-1)
     elif OutType == 2:
-#        Ch2 = plt.contourf(x_loc,y_loc,MPhi, alpha=.9, cmap=color_map,norm=normlizer)
-        Ch2 = plt.pcolormesh(x_loc, y_loc, MPhi, cmap=color_map,norm=normlizer)
+        Ch2 = plt.pcolormesh(x_loc, y_loc, MPhi, shading='auto')
         figTXT = 'Fig_PhiS0'+str(ii-1)
     elif OutType == 3:
-#        Ch2 = plt.contourf(x_loc,y_loc,MspeedS, alpha=.9, cmap=color_map,norm=normlizer)
-        Ch2 = plt.pcolormesh(x_loc, y_loc, MspeedS, cmap=color_map,norm=normlizer)
+        Ch2 = plt.pcolormesh(x_loc, y_loc, MspeedS, shading='auto')
         figTXT = 'Fig_SpeedS'+str(ii-1)
     elif OutType == 4:
-#        Ch2 = plt.contourf(x_loc,y_loc,MspeedF, alpha=.9, cmap=plt.cm.jet,norm=normlizer)
-        Ch2 = plt.pcolormesh(x_loc, y_loc, MspeedF, cmap=color_map,norm=normlizer)
+        Ch2 = plt.pcolormesh(x_loc, y_loc, MspeedF, shading='auto')
         figTXT = 'Fig_SpeedF'+str(ii-1)
     
-#    cbar = plt.colorbar(mpl.cm.ScalarMappable(norm = normlizer,
-#               cmap = color_map), shrink = 0.82,aspect = 20)
-    cbar = plt.colorbar(cmap = color_map, shrink = 0.82,aspect = 20)
+    cbar = plt.colorbar(shrink = 0.82,aspect = 20)
     cbar.ax.tick_params(labelsize=24)
 
     plt.text(0,max(y_ini)*1.02,'t = '+ str(timeStep[ii-1]) +' sec', fontdict={'size': 16, 'color': 'black'},backgroundcolor = 'w')
-#    plt.text(max(x_ini)*0.79,max(y_ini)*0.95,'t = '+ str(timeStep[ii-1]) +' sec', fontdict={'size': 22, 'color': 'black'},backgroundcolor = 'w')
-#    plt.show()
+    plt.show()
     
     if schreiben == 1: 
         plt.savefig(dir_out+figTXT+'.png') 
