@@ -1,6 +1,8 @@
 **************************************************************************
-##		*  *  *  *  *      MoSES_2PDF     *  *  *  *  *		
+##		*  *  *  *  *      MoSES_2PDF (version 1.0x)    *  *  *  *  *		
 **************************************************************************
+(developed by Chi-Jyun Ko, Po-Chih Chen, Hock-Kiet Wong and Yih-Chin Tai)
+
 #### There are two modes:
 
 - "adNOC_2Pb_landslide" is for the mode of landslide type.
@@ -12,7 +14,7 @@
 MoSES_2PDF was developed and tested on Ubuntu 18.04 LTS, in which the CUDA Version 11.0 is installed. 
 The execution has been tested under CUDA Version 11.0 and 11.2.
 
-- ##### PS How to install CUDA on Linux
+- ##### **PS** install CUDA on Linux
 ```
 sudo apt install nvidia-cuda-toolkit
 ```
@@ -21,7 +23,7 @@ sudo apt install nvidia-cuda-toolkit
 
 Use the makefile provided in the package 
 
-(Remark: It works only with GCC-compiler. The IBM and PGI compilers do not work in the current version.)
+(**Remark:** It works only with GCC-compiler. The IBM and PGI compilers do not work in the current version.)
 
 - #### for MoSES_2PDF landslide type:
 ```
@@ -56,13 +58,13 @@ make
 
 ## Third step: Parameter setting
 
-All the parameters (simulation duration, material parameters and locations of the topography data) can be found and specified in "par_List".
+All the parameters (simulation duration, material parameters and locations of the topography data) can be found and specified in text-file "par_List".
 
 - #### for MoSES_2PDF landslide type:
-   in ./MoSES_2PDF_landslide/par_list
+   in file "./MoSES_2PDF_landslide/par_list"
 
 - #### for MoSES_2PDF inflow type:
-    in ./MoSES_2PDF_inflow/par_list
+    in file "./MoSES_2PDF_inflow/par_list"
 
 ## Fourth step: Execution
 
@@ -73,7 +75,7 @@ All the parameters (simulation duration, material parameters and locations of th
 ```
 - #### execution for MoSES_2PDF inflow type:
 ```
-  cd ./MoSES_2PDF_inflow
+    cd ./MoSES_2PDF_inflow
     ./MoSES_2PDF_inflow
 ```
 ## TOPOGRAPHY DATA: (in directory "Data")
@@ -81,24 +83,24 @@ All the parameters (simulation duration, material parameters and locations of th
 Following the government regulations, only the DEMs with a resolution of 20 m are provided in this package for test.
 
 
-## DataProcess
+## DataProcess (illustration of computed results)
 
-- #### With plotting tool written in phthon
-In directory "plotResult": The python code "plot_2PbGPU.py" can plot the computed results in directory "result2Pb".
+- #### With plotting tool written in python
+> In directory "plotResult": The python code "plot_2PbGPU.py" can plot the computed results in directory "result2Pb".
 
 - #### For GIS (asc-format)
-In directory "toGISFile": The code "toGIS" can transform the computed results in directory "result2Pb" to directory "result2Pb/ascFile" for illustration in QGIS or ArcGIS.
+> In directory "toGISFile": The code "toGIS" can transform the computed results in directory "result2Pb" to directory "result2Pb/ascFile" for illustration in QGIS or ArcGIS.
 
 - #### Illustration in ANSI-Platform
-In directory "toANSIPFile": The code "toANSIP" can transform the computed results in directory "result2Pb" to directory "result2Pb/openGLFile" for illustration in ANSI-platform.
+> In directory "toANSIPFile": The code "toANSIP" can transform the computed results in directory "result2Pb" to directory "result2Pb/openGLFile" for illustration in ANSI-platform.
 
 ## Demo video
 
 - #### MoSES_2PDF_demo:
-https://youtu.be/9E9veNhrSME
+> 　https://youtu.be/9E9veNhrSME
 
 - #### ANSIP_demo:
-https://youtu.be/m0tNiK7Di6U
+>　https://youtu.be/m0tNiK7Di6U
 
 ## Help
 
@@ -106,7 +108,7 @@ https://youtu.be/m0tNiK7Di6U
 
 - And any suggestion(s) or collaboration for extending the current code is welcome.
 
-Prof. Dr.-Ing Yih-Chin Tai <br>
-Dept. Hydraulic and Ocean Engineering<br>
-National Cheng Kung University, Tainan, Taiwan<br>
-First version:  2021/04/07 (modified on 2021/06/22)
+> Prof. Dr.-Ing Yih-Chin Tai <br>
+> Dept. Hydraulic and Ocean Engineering<br>
+> National Cheng Kung University, Tainan, Taiwan<br>
+> First version:  2021/04/07 (modified on 2021/06/22)
