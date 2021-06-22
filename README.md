@@ -7,7 +7,8 @@
 
 ## Requirements
 
-MoSES_2PDF was developed and tested on Ubuntu 18.04 LTS, in which the CUDA Version 11.2 is installed.
+MoSES_2PDF was developed and tested on Ubuntu 18.04 LTS, in which the CUDA Version 11.0 is installed. 
+The executable file has been tested under CUDA Version 11.0 and 11.2.
 
 #### PS How to install CUDA on Linux
 ```
